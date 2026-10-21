@@ -1,0 +1,292 @@
+`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Road to Doomsday — MCU Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #0b0f0c;
+    --surface: #12160f;
+    --surface2: #191f16;
+    --line: #26301f;
+    --text: #e9ede4;
+    --muted: #8b9483;
+    --doom: #2f7a4f;
+    --doom-bright: #4fd08a;
+    --gold: #cfa53a;
+    --skip: #4a4f43;
+  }
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Sans', sans-serif; }
+
+  .wrap{ max-width: 880px; margin: 0 auto; padding: 40px 20px 80px; }
+
+  .hero{ position:relative; padding-bottom: 28px; margin-bottom: 28px; border-bottom: 1px solid var(--line); }
+  .eyebrow{ font-family:'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--doom-bright); margin-bottom: 10px; }
+  h1{ font-family:'Anton', sans-serif; font-weight:400; font-size: clamp(34px, 6vw, 56px); line-height: 0.95; margin: 0 0 10px; letter-spacing: 0.01em; }
+  h1 span{ color: var(--doom-bright); }
+  .sub{ color: var(--muted); font-size: 15px; max-width: 560px; }
+
+  .countdown{ position:absolute; right:0; top:6px; text-align:right; font-family:'JetBrains Mono', monospace; }
+  .countdown .num{ font-size: 30px; color: var(--gold); font-weight: 600; }
+  .countdown .lbl{ font-size: 11px; color: var(--muted); text-transform:uppercase; letter-spacing:0.1em; }
+
+  .controls{ position: sticky; top: 0; background: var(--bg); padding: 16px 0; z-index: 5; }
+  .searchbar{ display:flex; align-items:center; gap:10px; background: var(--surface); border:1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .searchbar svg{ flex-shrink:0; opacity:0.6; }
+  .searchbar input{ flex:1; background:transparent; border:none; outline:none; color:var(--text); font-size:15px; font-family:'IBM Plex Sans', sans-serif; }
+  .searchbar input::placeholder{ color: var(--muted); }
+  .clearbtn{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:18px; line-height:1; padding:2px 6px; }
+  .clearbtn:hover{ color:var(--text); }
+
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .chip{ font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.03em; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--muted); cursor:pointer; user-select:none; transition: all .15s ease; }
+  .chip:hover{ border-color: var(--doom-bright); color: var(--text); }
+  .chip.active{ background: var(--doom); border-color: var(--doom); color: #fff; }
+  .chip .dot{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; }
+  .dot.ess{ background: var(--gold); }
+  .dot.ctx{ background: var(--doom-bright); }
+  .dot.skip{ background: var(--skip); }
+
+  .count{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--muted); margin: 14px 2px 6px; }
+
+  .phase-title{ font-family:'Anton', sans-serif; font-weight:400; font-size:13px; letter-spacing:0.14em; text-transform:uppercase; color:var(--doom-bright); margin: 30px 2px 10px; padding-top: 4px; }
+
+  .item{ display:flex; align-items:flex-start; gap:14px; padding:14px 14px; border-radius:10px; border:1px solid transparent; margin-bottom:4px; transition: background .12s ease, border-color .12s ease; }
+  .item:hover{ background: var(--surface); border-color: var(--line); }
+  .item.checked .title{ text-decoration: line-through; color: var(--muted); }
+  .item.checked{ opacity: 0.55; }
+
+  .num{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--muted); width:26px; flex-shrink:0; padding-top:3px; text-align:right; }
+
+  .cb{ appearance:none; -webkit-appearance:none; width:18px; height:18px; border-radius:5px; border:1.5px solid var(--line); background:var(--surface2); flex-shrink:0; margin-top:2px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .cb:checked{ background: var(--doom); border-color: var(--doom); }
+  .cb:checked::after{ content:'✓'; color:#fff; font-size:12px; }
+
+  .badge{ width:8px; height:8px; border-radius:50%; margin-top:7px; flex-shrink:0; }
+  .badge.ess{ background: var(--gold); }
+  .badge.ctx{ background: var(--doom-bright); }
+  .badge.skip{ background: var(--skip); }
+
+  .body{ flex:1; min-width:0; }
+  .title{ font-size:15.5px; font-weight:500; }
+  .meta{ font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--muted); margin-top:4px; display:flex; flex-wrap:wrap; gap:10px; }
+  .meta .plat{ color: var(--doom-bright); }
+
+  .empty{ text-align:center; color:var(--muted); padding: 60px 20px; font-family:'JetBrains Mono', monospace; font-size:14px; }
+
+  ::selection{ background: var(--doom); color:#fff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Multiverse Saga // Prep Tracker</div>
+    <h1>ROAD TO<br><span>DOOMSDAY</span></h1>
+    <div class="sub">64 titles. Search, filter, and check off what you've watched before Dec 18, 2026.</div>
+    <div class="countdown">
+      <div class="num" id="daysLeft">—</div>
+      <div class="lbl">days left</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="searchbar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search" type="text" placeholder="Search titles, years, phases, platforms…" autocomplete="off">
+      <button class="clearbtn" id="clearBtn" style="display:none;">✕</button>
+    </div>
+    <div class="chips">
+      <div class="chip active" data-filter="all">All</div>
+      <div class="chip" data-filter="ess"><span class="dot ess"></span>Essential</div>
+      <div class="chip" data-filter="ctx"><span class="dot ctx"></span>Context</div>
+      <div class="chip" data-filter="skip"><span class="dot skip"></span>Skippable</div>
+      <div class="chip" data-filter="unwatched">Unwatched only</div>
+    </div>
+    <div class="count" id="resultCount"></div>
+  </div>
+
+  <div id="list"></div>
+  <div class="empty" id="emptyState" style="display:none;">No titles match that search. Try something else, true believer.</div>
+
+</div>
+
+<script>
+const DATA = [
+ {n:1, phase:"Phase 1 — The Foundation", t:"Iron Man", y:2008, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:2, phase:"Phase 1 — The Foundation", t:"The Incredible Hulk", y:2008, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:3, phase:"Phase 1 — The Foundation", t:"One-Shot: The Consultant", y:2011, type:"Short", imp:"skip", plat:"Disney+"},
+ {n:4, phase:"Phase 1 — The Foundation", t:"Iron Man 2", y:2010, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:5, phase:"Phase 1 — The Foundation", t:"One-Shot: A Funny Thing Happened...", y:2011, type:"Short", imp:"skip", plat:"Disney+"},
+ {n:6, phase:"Phase 1 — The Foundation", t:"Thor", y:2011, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:7, phase:"Phase 1 — The Foundation", t:"Captain America: The First Avenger", y:2011, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:8, phase:"Phase 1 — The Foundation", t:"One-Shot: Item 47", y:2012, type:"Short", imp:"skip", plat:"Disney+"},
+ {n:9, phase:"Phase 1 — The Foundation", t:"The Avengers", y:2012, type:"Movie", imp:"ess", plat:"Disney+"},
+
+ {n:10, phase:"Phase 2", t:"One-Shot: Agent Carter", y:2013, type:"Short", imp:"skip", plat:"Disney+"},
+ {n:11, phase:"Phase 2", t:"Agent Carter (Seasons 1–2)", y:2015, type:"Series", imp:"ctx", plat:"Disney+"},
+ {n:12, phase:"Phase 2", t:"Iron Man 3", y:2013, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:13, phase:"Phase 2", t:"Thor: The Dark World", y:2013, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:14, phase:"Phase 2", t:"Captain America: The Winter Soldier", y:2014, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:15, phase:"Phase 2", t:"Guardians of the Galaxy", y:2014, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:16, phase:"Phase 2", t:"One-Shot: All Hail the King", y:2014, type:"Short", imp:"skip", plat:"Disney+"},
+ {n:17, phase:"Phase 2", t:"Avengers: Age of Ultron", y:2015, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:18, phase:"Phase 2", t:"Ant-Man", y:2015, type:"Movie", imp:"ctx", plat:"Disney+"},
+
+ {n:19, phase:"Phase 3", t:"Captain America: Civil War", y:2016, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:20, phase:"Phase 3", t:"Doctor Strange", y:2016, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:21, phase:"Phase 3", t:"Guardians of the Galaxy Vol. 2", y:2017, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:22, phase:"Phase 3", t:"Spider-Man: Homecoming", y:2017, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:23, phase:"Phase 3", t:"Thor: Ragnarok", y:2017, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:24, phase:"Phase 3", t:"Black Panther", y:2018, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:25, phase:"Phase 3", t:"Avengers: Infinity War", y:2018, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:26, phase:"Phase 3", t:"Ant-Man and the Wasp", y:2018, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:27, phase:"Phase 3", t:"Captain Marvel", y:2019, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:28, phase:"Phase 3", t:"Avengers: Endgame", y:2019, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:29, phase:"Phase 3", t:"Spider-Man: Far From Home", y:2019, type:"Movie", imp:"ess", plat:"Disney+"},
+
+ {n:30, phase:"Phase 4 — Multiverse Saga Begins", t:"WandaVision", y:2021, type:"Series", imp:"ess", plat:"Disney+"},
+ {n:31, phase:"Phase 4 — Multiverse Saga Begins", t:"The Falcon and the Winter Soldier", y:2021, type:"Series", imp:"ctx", plat:"Disney+"},
+ {n:32, phase:"Phase 4 — Multiverse Saga Begins", t:"Loki (Season 1)", y:2021, type:"Series", imp:"ess", plat:"Disney+"},
+ {n:33, phase:"Phase 4 — Multiverse Saga Begins", t:"Black Widow", y:2021, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:34, phase:"Phase 4 — Multiverse Saga Begins", t:"What If...? (Season 1)", y:2021, type:"Series", imp:"skip", plat:"Disney+"},
+ {n:35, phase:"Phase 4 — Multiverse Saga Begins", t:"Shang-Chi and the Legend of the Ten Rings", y:2021, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:36, phase:"Phase 4 — Multiverse Saga Begins", t:"Eternals", y:2021, type:"Movie", imp:"skip", plat:"Disney+"},
+ {n:37, phase:"Phase 4 — Multiverse Saga Begins", t:"Hawkeye", y:2021, type:"Series", imp:"ctx", plat:"Disney+"},
+ {n:38, phase:"Phase 4 — Multiverse Saga Begins", t:"Spider-Man: No Way Home", y:2021, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:39, phase:"Phase 4 — Multiverse Saga Begins", t:"Moon Knight", y:2022, type:"Series", imp:"skip", plat:"Disney+"},
+ {n:40, phase:"Phase 4 — Multiverse Saga Begins", t:"Doctor Strange in the Multiverse of Madness", y:2022, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:41, phase:"Phase 4 — Multiverse Saga Begins", t:"Ms. Marvel", y:2022, type:"Series", imp:"skip", plat:"Disney+"},
+ {n:42, phase:"Phase 4 — Multiverse Saga Begins", t:"Thor: Love and Thunder", y:2022, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:43, phase:"Phase 4 — Multiverse Saga Begins", t:"She-Hulk: Attorney at Law", y:2022, type:"Series", imp:"ctx", plat:"Disney+"},
+ {n:44, phase:"Phase 4 — Multiverse Saga Begins", t:"Werewolf by Night", y:2022, type:"Special", imp:"skip", plat:"Disney+"},
+ {n:45, phase:"Phase 4 — Multiverse Saga Begins", t:"Black Panther: Wakanda Forever", y:2022, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:46, phase:"Phase 4 — Multiverse Saga Begins", t:"The Guardians of the Galaxy Holiday Special", y:2022, type:"Special", imp:"skip", plat:"Disney+"},
+
+ {n:47, phase:"Phase 5", t:"Ant-Man and the Wasp: Quantumania", y:2023, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:48, phase:"Phase 5", t:"Secret Invasion", y:2023, type:"Series", imp:"skip", plat:"Disney+"},
+ {n:49, phase:"Phase 5", t:"Guardians of the Galaxy Vol. 3", y:2023, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:50, phase:"Phase 5", t:"What If...? (Season 2)", y:2023, type:"Series", imp:"skip", plat:"Disney+"},
+ {n:51, phase:"Phase 5", t:"Loki (Season 2)", y:2023, type:"Series", imp:"ess", plat:"Disney+"},
+ {n:52, phase:"Phase 5", t:"The Marvels", y:2023, type:"Movie", imp:"skip", plat:"Disney+"},
+ {n:53, phase:"Phase 5", t:"Echo", y:2024, type:"Series", imp:"skip", plat:"Disney+"},
+ {n:54, phase:"Phase 5", t:"Agatha All Along", y:2024, type:"Series", imp:"ctx", plat:"Disney+"},
+ {n:55, phase:"Phase 5", t:"Deadpool & Wolverine", y:2024, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:56, phase:"Phase 5", t:"Daredevil: Born Again (Season 1)", y:2025, type:"Series", imp:"ess", plat:"Disney+"},
+ {n:57, phase:"Phase 5", t:"Thunderbolts*", y:2025, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:58, phase:"Phase 5", t:"Ironheart", y:2025, type:"Series", imp:"ctx", plat:"Disney+"},
+
+ {n:59, phase:"Phase 6 — Direct Lead-In", t:"Captain America: Brave New World", y:2025, type:"Movie", imp:"ess", plat:"Disney+"},
+ {n:60, phase:"Phase 6 — Direct Lead-In", t:"The Fantastic Four: First Steps", y:2025, type:"Movie", imp:"ess", plat:"Disney+ (in theaters first)"},
+ {n:61, phase:"Phase 6 — Direct Lead-In", t:"Wonder Man", y:2026, type:"Series", imp:"ctx", plat:"Disney+"},
+ {n:62, phase:"Phase 6 — Direct Lead-In", t:"Daredevil: Born Again (Season 2)", y:2026, type:"Series", imp:"ess", plat:"Disney+"},
+ {n:63, phase:"Phase 6 — Direct Lead-In", t:"Spider-Man: Brand New Day", y:2026, type:"Movie", imp:"ctx", plat:"Theaters (Disney+ later)"},
+ {n:64, phase:"Phase 6 — Direct Lead-In", t:"Avengers: Doomsday", y:2026, type:"Movie", imp:"ess", plat:"Theaters, Dec 18 2026"},
+
+ {n:65, phase:"Optional X-Men Homework", t:"X-Men", y:2000, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:66, phase:"Optional X-Men Homework", t:"X2: X-Men United", y:2003, type:"Movie", imp:"ctx", plat:"Disney+"},
+ {n:67, phase:"Optional X-Men Homework", t:"X-Men: Days of Future Past", y:2014, type:"Movie", imp:"ctx", plat:"Disney+"},
+];
+
+const impLabel = {ess:"Essential", ctx:"Context", skip:"Skippable"};
+const checked = new Set();
+let activeFilter = "all";
+let searchTerm = "";
+
+function targetDate(){
+  return new Date("2026-12-18T00:00:00");
+}
+function updateCountdown(){
+  const now = new Date();
+  const diff = targetDate() - now;
+  const days = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
+  document.getElementById("daysLeft").textContent = days;
+}
+updateCountdown();
+
+function matchesSearch(item, term){
+  if(!term) return true;
+  const hay = (item.t + " " + item.phase + " " + item.y + " " + item.type + " " + item.plat).toLowerCase();
+  return hay.includes(term.toLowerCase());
+}
+function matchesFilter(item){
+  if(activeFilter === "all") return true;
+  if(activeFilter === "unwatched") return !checked.has(item.n);
+  return item.imp === activeFilter;
+}
+
+function render(){
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  let lastPhase = null;
+  let visibleCount = 0;
+
+  DATA.forEach(item => {
+    if(!matchesSearch(item, searchTerm) || !matchesFilter(item)) return;
+    visibleCount++;
+
+    if(item.phase !== lastPhase){
+      const ph = document.createElement("div");
+      ph.className = "phase-title";
+      ph.textContent = item.phase;
+      list.appendChild(ph);
+      lastPhase = item.phase;
+    }
+
+    const row = document.createElement("div");
+    row.className = "item" + (checked.has(item.n) ? " checked" : "");
+
+    row.innerHTML = `
+      <div class="num">${item.n}</div>
+      <input type="checkbox" class="cb" ${checked.has(item.n) ? "checked" : ""}>
+      <div class="badge ${item.imp}"></div>
+      <div class="body">
+        <div class="title">${item.t} <span style="color:var(--muted); font-weight:400;">(${item.y})</span></div>
+        <div class="meta">
+          <span>${item.type}</span>
+          <span>${impLabel[item.imp]}</span>
+          <span class="plat">${item.plat}</span>
+        </div>
+      </div>
+    `;
+
+    row.querySelector(".cb").addEventListener("change", (e) => {
+      if(e.target.checked) checked.add(item.n); else checked.delete(item.n);
+      row.classList.toggle("checked", e.target.checked);
+    });
+
+    list.appendChild(row);
+  });
+
+  document.getElementById("emptyState").style.display = visibleCount === 0 ? "block" : "none";
+  document.getElementById("resultCount").textContent = `${visibleCount} of ${DATA.length} titles`;
+}
+
+document.getElementById("search").addEventListener("input", (e) => {
+  searchTerm = e.target.value;
+  document.getElementById("clearBtn").style.display = searchTerm ? "block" : "none";
+  render();
+});
+document.getElementById("clearBtn").addEventListener("click", () => {
+  document.getElementById("search").value = "";
+  searchTerm = "";
+  document.getElementById("clearBtn").style.display = "none";
+  render();
+});
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    activeFilter = chip.dataset.filter;
+    render();
+  });
+});
+
+render();
+</script>
+</body>
+</html>
